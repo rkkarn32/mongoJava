@@ -2,6 +2,8 @@ package mflix.api.daos;
 
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoCursor;
+import com.mongodb.client.MongoIterable;
 import com.mongodb.client.model.*;
 import org.bson.Document;
 import org.bson.conversions.Bson;
@@ -11,6 +13,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -118,11 +121,13 @@ public class MovieDao extends AbstractMFlixDao {
    */
   public List<Document> getMoviesByCountry(String... country) {
 
-    Bson queryFilter = new Document();
-    Bson projection = new Document();
+    Bson queryFilter = Filters.in("countries", country);
+    Bson projection = Projections.fields(Projections.include("title"));
     //TODO> Ticket: Projection - implement the query and projection required by the unit test
     List<Document> movies = new ArrayList<>();
-
+    MongoCursor<Document> resultCursor = moviesCollection.find(queryFilter).projection(projection).iterator();    
+    resultCursor.forEachRemaining(doc->movies.add(doc));;
+    
     return movies;
   }
 
@@ -166,6 +171,8 @@ public class MovieDao extends AbstractMFlixDao {
     Bson sort = null;
     //TODO> Ticket: Subfield Text Search - implement the expected cast
     // filter and sort
+    
+    
     List<Document> movies = new ArrayList<>();
     moviesCollection
         .find(castFilter)
